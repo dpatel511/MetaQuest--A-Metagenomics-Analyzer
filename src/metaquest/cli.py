@@ -423,10 +423,12 @@ def create_parser():
                 2. Metagenomic Assembly (MEGAHIT)
                 3. Gene Prediction (Pyrodigal metagenomic mode)
                 4. Functional Annotation (eggNOG-mapper)
-                5. Descriptive Report Generation
+                5. Gene Abundance (BBMap read mapping, TPM)
+                6. Descriptive Report Generation
             
             Use --taxonomy-only for rapid taxonomic classification, or
-            --skip-functional to stop after gene prediction.
+            --skip-functional to stop after gene prediction, or
+            --skip-abundance to skip read mapping and gene abundance.
         """),
         formatter_class=CustomHelpFormatter
     )
@@ -477,6 +479,11 @@ def create_parser():
         '--skip-functional',
         action='store_true',
         help="Run assembly and Pyrodigal but skip eggNOG functional annotation"
+    )
+    parser_analyze.add_argument(
+        '--skip-abundance',
+        action='store_true',
+        help="Skip read mapping and gene/functional abundance estimation"
     )
     
     # Add argument groups
@@ -666,6 +673,7 @@ def main():
                     db_dir=args.db_dir,
                 ),
                 require_functional=True,
+                require_abundance=True,
             )
             
             formatter.success("System check completed successfully")
@@ -733,6 +741,7 @@ def main():
                     taxonomy_only=taxonomy_only,
                     require_interleaved=bool(args.interleaved),
                     require_functional=not taxonomy_only and not args.skip_functional,
+                    require_abundance=not taxonomy_only and not args.skip_abundance,
                 )
             formatter.success("Tools and databases are ready")
 
@@ -767,6 +776,9 @@ def main():
                     else 'Taxonomy + assembly + gene prediction'
                     if args.skip_functional
                     else 'Taxonomy + assembly + gene prediction + eggNOG'
+                ),
+                'Gene abundance': (
+                    'Skipped' if taxonomy_only or args.skip_abundance else 'BBMap + TPM'
                 ),
                 'Memory mode': 'Low memory' if args.low_memory else 'Default',
                 'Threads': str(args.annotation_threads),
@@ -805,6 +817,14 @@ def main():
                     metrics['eggNOG annotated genes'] = (
                         f"{annotation.get('annotated_genes', 0):,}"
                     )
+            abundance = summary.get('abundance', {})
+            if abundance:
+                metrics[f"Mapped {abundance.get('count_unit', 'reads')}"] = (
+                    f"{abundance.get('mapping_rate', 0):.2%}"
+                )
+                metrics['Assigned to genes'] = (
+                    f"{abundance.get('gene_assignment_rate', 0):.2%}"
+                )
             formatter.section_header("Results")
             formatter.result(metrics)
             formatter.success(f"Completed in {formatter._format_time(elapsed)}")

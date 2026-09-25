@@ -216,6 +216,55 @@ def generate_stable_reports(ctx) -> None:
                 "\n".join(lines) + "\n", encoding="utf-8"
             )
         summary["annotation"] = annotation_summary
+    abundance = getattr(ctx, "abundance", None)
+    if abundance:
+        abundance_summary = {
+            key: value for key, value in abundance.summary.items() if key != "functional"
+        }
+        abundance_summary["gene_abundance"] = str(
+            abundance.gene_abundance.resolve().relative_to(output_dir)
+        )
+        if abundance.functional_abundance:
+            abundance_summary["functional_abundance"] = str(
+                abundance.functional_abundance.resolve().relative_to(output_dir)
+            )
+            abundance_summary["functional"] = abundance.summary.get("functional", {})
+        summary["abundance"] = abundance_summary
+        unit = abundance_summary["count_unit"]
+        lines = [
+            "METAQUEST GENE ABUNDANCE",
+            "========================",
+            "",
+            f"Mapper: BBMap {abundance_summary['tool_version']}",
+            f"Minimum alignment identity: {abundance_summary['min_identity']}",
+            f"Multi-mapping policy: {abundance_summary['ambiguous']}",
+            f"Input {unit}: {abundance_summary[f'input_{unit}']}",
+            f"Mapped {unit}: {abundance_summary[f'mapped_{unit}']}",
+            f"Mapping rate: {abundance_summary['mapping_rate']:.2%}",
+            f"{unit.capitalize()} assigned to genes: {abundance_summary[f'{unit}_in_genes']}",
+            f"Intergenic {unit}: {abundance_summary[f'intergenic_{unit}']}",
+            f"Gene assignment rate: {abundance_summary['gene_assignment_rate']:.2%}",
+            f"Genes with counts: {abundance_summary['genes_with_counts']} / {abundance_summary['total_genes']}",
+            f"Normalization: {abundance_summary['normalization']}",
+        ]
+        functional = abundance_summary.get("functional")
+        if functional:
+            lines += [
+                f"Term attribution: {functional['term_attribution']}",
+                f"TPM in eggNOG-annotated genes: {functional['tpm_in_annotated_genes']:.1f} / 1,000,000",
+            ]
+        lines += [
+            "",
+            "Interpretation note",
+            "-------------------",
+            "Abundance describes reads that map to assembled, predicted genes only.",
+            "Unassembled and intergenic reads are excluded from TPM denominators.",
+            "TPM values are compositional; cross-sample comparisons need appropriate",
+            "compositional or count-based statistics.",
+        ]
+        (output_dir / "04_abundance_report.txt").write_text(
+            "\n".join(lines) + "\n", encoding="utf-8"
+        )
     if getattr(ctx, "preprocessing", None):
         summary["preprocessing"] = ctx.preprocessing
     if hasattr(ctx, "config"):
@@ -310,6 +359,22 @@ def _write_html_report(output_dir: Path, summary: dict[str, Any]) -> None:
         ]
         sections.append(f"<section><h2>Functional annotation</h2>{metric_table(rows)}</section>")
 
+    abundance = summary.get("abundance")
+    if abundance:
+        unit = abundance["count_unit"]
+        rows = [
+            ("Mapper", f"BBMap {abundance['tool_version']}"),
+            (f"Input {unit}", f"{abundance[f'input_{unit}']:,}"),
+            ("Mapping rate", f"{abundance['mapping_rate']:.2%}"),
+            ("Gene assignment rate", f"{abundance['gene_assignment_rate']:.2%}"),
+            ("Genes with counts", f"{abundance['genes_with_counts']:,} / {abundance['total_genes']:,}"),
+            ("Normalization", abundance["normalization"]),
+        ]
+        functional = abundance.get("functional")
+        if functional:
+            rows.append(("Term attribution", functional["term_attribution"]))
+        sections.append(f"<section><h2>Gene abundance</h2>{metric_table(rows)}</section>")
+
     captions = {
         "qc_metrics": "Base-quality rates before and after preprocessing.",
         "qc_retention": "Individual reads retained and filtered by fastp.",
@@ -317,6 +382,8 @@ def _write_html_report(output_dir: Path, summary: dict[str, Any]) -> None:
         "taxonomy_top": "Dominant taxa and mutually exclusive classification remainder.",
         "assembly_contig_lengths": "Assembly contig lengths on a logarithmic scale.",
         "assembly_cumulative_length": "Cumulative assembly size with L50 and L90 markers.",
+        "abundance_cog": "COG categories ranked by summed gene TPM.",
+        "abundance_ko": "KEGG orthologs ranked by summed gene TPM.",
     }
     figures = []
     for relative in summary.get("figures", []):

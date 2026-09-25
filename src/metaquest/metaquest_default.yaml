@@ -32,6 +32,14 @@ annotation:
   eggnog_database_release: "5.0.2"
   min_contig_length: 200
 
+abundance:
+  mapper: bbmap
+  threads: 8
+  min_identity: 0.95        # minimum alignment identity for a read to count
+  ambiguous: random         # BBMap multi-mapping policy: random | best | all | toss
+  term_attribution: full    # multi-term genes: full value to each term, or split
+  java_memory: null         # e.g. "6g" to cap BBMap's Java heap
+
 preprocessing:
   enabled: true
   threads: 4

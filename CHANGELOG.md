@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- Add a Gene Abundance stage that maps quality-controlled reads to the
+  stable-ID contigs with BBMap, assigns fragments to Pyrodigal CDS features,
+  and writes per-gene counts, mean depth, RPK, and TPM
+  (`gene_abundance/gene_abundance.tsv`).
+- Aggregate gene TPM into COG, KO, EC, and GO functional abundance
+  (`gene_abundance/functional_abundance.tsv`) with configurable full or split
+  attribution for multi-term genes.
+- Report mapping, gene-assignment, and annotated-TPM denominators in
+  `analysis_summary.json`, `04_abundance_report.txt`, and the HTML report.
+- Add `--skip-abundance` and the `abundance` configuration section.
 - Continue interrupted database downloads across multiple validated HTTP range
   responses instead of rejecting each completed chunk as an unexpected size.
 - Direct database help and missing-data diagnostics to MetaQuest's managed

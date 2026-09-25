@@ -40,8 +40,8 @@ eggNOG-mapper is executed as a separate command. Version 2.1.15 is the final
 v2 release compatible with the eggNOG v5.0.2 database. MetaQuest does not
 vendor or modify eggNOG-mapper.
 
-MetaQuest uses BBTools' `reformat.sh` only when an interleaved FASTQ must be
-split. The Bioconda package identifies its license as BSD-3-Clause-LBNL.
+MetaQuest uses BBTools' `reformat.sh` when an interleaved FASTQ must be
+split, and `bbmap.sh` to map reads to assembled contigs for gene abundance. The Bioconda package identifies its license as BSD-3-Clause-LBNL.
 
 ## Reference databases
 
