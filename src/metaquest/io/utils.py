@@ -30,6 +30,7 @@ def run_system_check(
     taxonomy_only: bool = False,
     require_interleaved: bool = False,
     require_functional: bool = False,
+    require_abundance: bool = False,
 ):
     """
     Runs a comprehensive check of all dependencies using the formatter for output.
@@ -46,6 +47,8 @@ def run_system_check(
         tools['megahit'] = '--version'
     if require_functional:
         tools.update({'diamond': 'version', 'emapper.py': '--version'})
+    if require_abundance and not taxonomy_only:
+        tools['bbmap.sh'] = '--version'
     if require_interleaved:
         tools['reformat.sh'] = None
     for tool, cmd in tools.items():

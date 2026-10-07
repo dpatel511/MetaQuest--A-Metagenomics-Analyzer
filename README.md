@@ -17,6 +17,8 @@ not make clinical or pathogen-risk claims.
 - Pyrodigal metagenomic gene prediction
 - eggNOG-mapper orthology-based functional annotation
 - per-gene annotations and aggregated COG, KO, EC, and GO counts
+- read-mapping gene abundance (BBMap, TPM) with TPM-weighted COG, KO, EC, and
+  GO functional abundance
 - descriptive text, JSON, offline HTML, and publication figure reporting
 - explicit classified/unclassified denominators and reproducibility metadata
 - versioned taxonomy and eggNOG database installation
@@ -34,6 +36,7 @@ FASTQ
   ├── MEGAHIT
   ├── Pyrodigal
   ├── eggNOG-mapper → COG / KO / EC / GO
+  ├── BBMap read mapping → gene TPM → functional abundance
   └── descriptive reporting → HTML + figures + plotted-data TSV
 ~~~
 
@@ -80,8 +83,9 @@ metaquest run \
   --output results/sample
 ~~~
 
-Use `--skip-functional` to stop after Pyrodigal, or `--taxonomy-only` to skip
-assembly, gene prediction, and functional annotation. The former
+Use `--skip-functional` to stop after Pyrodigal, `--skip-abundance` to skip
+read mapping and gene abundance, or `--taxonomy-only` to skip assembly, gene
+prediction, functional annotation, and abundance. The former
 `--skip-annotation` spelling remains as a deprecated alias for
 `--taxonomy-only`.
 

@@ -73,9 +73,63 @@ Record ordering does not invalidate the cache. Mapper temporary files remain
 inside the functional output directory and are removed after success or
 failure. Python output is unbuffered so `eggnog_mapper.log` can be monitored.
 
-These outputs describe gene presence, not abundance. Publication-ready
-quantitative functional abundance still requires a validated read-mapping and
-normalization stage.
+The files above describe gene presence. The gene abundance stage below adds
+read-based quantification.
+
+## Gene and functional abundance
+
+~~~text
+fastp-cleaned reads + contigs.stable.fasta + genes.gff3
+  ↓
+BBMap (nodisk, primary alignments, extended CIGAR)
+  ↓
+gene_abundance/
+  ├── gene_abundance.tsv
+  ├── functional_abundance.tsv
+  ├── bbmap.log
+  ├── summary.json
+  └── completion.json
+~~~
+
+Reads are mapped to the stable-ID contigs produced by gene prediction, so
+alignment coordinates match `genes.gff3` directly. SAM output is streamed into
+Python and is not written to disk.
+
+Counting rules:
+
+- Only primary alignments are used; secondary and supplementary records are
+  ignored. Multi-mapping reads are placed by BBMap's `ambiguous` policy
+  (default `random`).
+- Alignment identity is computed from the extended CIGAR (`=`/`X`/`I`/`D`) and
+  must reach `abundance.min_identity` (default `0.95`).
+- A read is assigned to the CDS containing its alignment midpoint.
+- For paired data, mates are combined so each fragment counts once. When the
+  two mates fall in different genes, the fragment is split equally between
+  them. Counts are therefore reported in fragments for paired input and in
+  reads for single-end input.
+- Mean depth is aligned reference bases overlapping the CDS divided by CDS
+  length.
+
+Gene values are length-normalized as reads per kilobase (RPK) and converted to
+TPM, so gene TPM sums to one million across all predicted genes.
+
+| File | Contents |
+|---|---|
+| `gene_abundance.tsv` | one row per predicted gene: coordinates, partial flag, count, mean depth, RPK, TPM, annotation status |
+| `functional_abundance.tsv` | per COG, KO, EC, and GO term: contributing genes, summed count, summed TPM |
+| `bbmap.log` | BBMap command and statistics |
+| `summary.json` | mapper version, parameters, mapping and gene-assignment rates |
+| `completion.json` | contig, GFF3, read, and parameter state for restart-safe reuse |
+
+With `abundance.term_attribution: full` (default), a gene annotated with
+several terms contributes its full value to each, so a namespace can sum to
+more than one million TPM. With `split`, the value is divided equally among
+the gene's terms and the namespace total equals the TPM of genes carrying at
+least one term. `summary.json` records the TPM share in eggNOG-annotated genes
+and in genes carrying each namespace.
+
+Use `--skip-abundance` to disable this stage. BBMap's Java heap can be capped
+with `abundance.java_memory` (for example `"6g"`).
 
 ## Interpretation limits
 
@@ -84,3 +138,8 @@ normalization stage.
 - Assembly can merge, fragment, or omit low-abundance sequences.
 - Closely related proteins can have different substrate specificity.
 - Functional abundance depends on read mapping and normalization choices.
+- Abundance covers only reads that map to assembled, predicted genes; the
+  mapping and gene-assignment rates state how much of the sample that is.
+- TPM is compositional. Cross-sample comparisons require compositional or
+  count-based statistical methods rather than direct TPM ratios.
+- Gene counts measure DNA copies in the sample, not expression.

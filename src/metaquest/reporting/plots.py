@@ -174,4 +174,24 @@ def generate_plots(ctx, taxonomy: dict | None) -> list[Path]:
             sns.barplot(data=table, y="display_term", x="gene_count", color=sns.color_palette()[0], ax=ax)
             ax.set(xlabel="Genes assigned to term", ylabel=f"{namespace} term", title=f"{sample}: top {namespace} assignments")
             generated += _save(fig, output / f"functional_{namespace.lower()}", config.plot_formats, config.plot_dpi)
+    abundance = getattr(ctx, "abundance", None)
+    if abundance and abundance.functional_abundance:
+        source = pd.read_csv(abundance.functional_abundance, sep="\t")
+        for namespace in ("COG", "KO"):
+            table = source[source["namespace"] == namespace].nlargest(config.top_functional_terms, "tpm")
+            if table.empty:
+                continue
+            table = table.copy()
+            if namespace == "COG":
+                table["display_term"] = table["term"].map(
+                    lambda term: f"{term} — {COG_LABELS.get(term, 'Other COG category')}"
+                )
+            else:
+                table["display_term"] = table["term"]
+            stem = f"abundance_{namespace.lower()}"
+            table.to_csv(data_dir / f"{stem}.tsv", sep="\t", index=False)
+            fig, ax = plt.subplots(figsize=(7.2, max(4.2, len(table) * 0.28)))
+            sns.barplot(data=table, y="display_term", x="tpm", color=sns.color_palette()[1], ax=ax)
+            ax.set(xlabel="Summed gene TPM", ylabel=f"{namespace} term", title=f"{sample}: most abundant {namespace} terms")
+            generated += _save(fig, output / stem, config.plot_formats, config.plot_dpi)
     return generated

@@ -59,6 +59,16 @@ class AnnotationConfig:
 
 
 @dataclass(frozen=True)
+class AbundanceConfig:
+    mapper: str = "bbmap"
+    threads: int = 8
+    min_identity: float = 0.95
+    ambiguous: str = "random"
+    term_attribution: str = "full"
+    java_memory: str | None = None
+
+
+@dataclass(frozen=True)
 class PreprocessingConfig:
     enabled: bool = True
     threads: int = 4
@@ -81,6 +91,7 @@ class MetaQuestConfig:
     assembly: AssemblyConfig = AssemblyConfig()
     classification: ClassificationConfig = ClassificationConfig()
     annotation: AnnotationConfig = AnnotationConfig()
+    abundance: AbundanceConfig = AbundanceConfig()
     preprocessing: PreprocessingConfig = PreprocessingConfig()
     reporting: ReportingConfig = ReportingConfig()
 
@@ -179,6 +190,7 @@ def load_config(
         assembly=_build_section(AssemblyConfig, raw, "assembly"),
         classification=_build_section(ClassificationConfig, raw, "classification"),
         annotation=_build_section(AnnotationConfig, raw, "annotation"),
+        abundance=_build_section(AbundanceConfig, raw, "abundance"),
         preprocessing=_build_section(PreprocessingConfig, raw, "preprocessing"),
         reporting=_build_section(ReportingConfig, raw, "reporting"),
     )
@@ -218,6 +230,16 @@ def validate_config(config: MetaQuestConfig | None = None) -> tuple[bool, list[s
         errors.append("annotation.diamond_block_size must be > 0")
     if cfg.annotation.tax_scope != "auto":
         errors.append("annotation.tax_scope currently supports only 'auto'")
+    if cfg.abundance.mapper != "bbmap":
+        errors.append("abundance.mapper currently supports only 'bbmap'")
+    if cfg.abundance.threads < 1:
+        errors.append("abundance.threads must be >= 1")
+    if not 0 < cfg.abundance.min_identity <= 1:
+        errors.append("abundance.min_identity must be in (0, 1]")
+    if cfg.abundance.ambiguous not in ("random", "best", "all", "toss"):
+        errors.append("abundance.ambiguous must be one of: random, best, all, toss")
+    if cfg.abundance.term_attribution not in ("full", "split"):
+        errors.append("abundance.term_attribution must be 'full' or 'split'")
     if cfg.preprocessing.qualified_quality_phred < 0:
         errors.append("preprocessing.qualified_quality_phred must be >= 0")
     if cfg.preprocessing.length_required < 1:

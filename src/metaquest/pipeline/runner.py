@@ -208,6 +208,7 @@ class PipelineRunner:
                 "read_mode": ctx.read_mode,
                 "taxonomy_only": ctx.skip_annotation,
                 "skip_functional": ctx.skip_functional,
+                "skip_abundance": ctx.skip_abundance,
                 "low_memory": ctx.low_memory,
                 "resume": ctx.resume,
             },
@@ -231,6 +232,9 @@ class PipelineRunner:
                 ).get("tool_version", "not_run"),
                 "eggnog_mapper": _read_json(
                     ctx.output_dir / "functional_annotation" / "summary.json"
+                ).get("tool_version", "not_run"),
+                "bbmap": _read_json(
+                    ctx.output_dir / "gene_abundance" / "summary.json"
                 ).get("tool_version", "not_run"),
                 "kraken_database": {
                     "path": str(ctx.config.databases.kraken_db.resolve()),
@@ -277,6 +281,7 @@ def build_default_pipeline(
     config: MetaQuestConfig,
     skip_annotation: bool = False,
     skip_functional: bool = False,
+    skip_abundance: bool = False,
 ) -> PipelineRunner:
     """
     Build the standard MetaQuest analysis pipeline.
@@ -286,7 +291,8 @@ def build_default_pipeline(
       2. Metagenomic assembly (MEGAHIT) [full workflow only]
       3. Gene prediction (Pyrodigal)
       4. Functional annotation (eggNOG-mapper) [unless skipped]
-      5. Stable reporting
+      5. Gene abundance (BBMap read mapping + TPM) [unless skipped]
+      6. Stable reporting
 
     Custom pathogen detection, ML, HMM, ESM, island detection, and risk
     scoring are intentionally excluded until independently validated.
@@ -310,6 +316,10 @@ def build_default_pipeline(
         runner.add_stage("Gene Prediction", run_annotation_stage)
         if not skip_functional:
             runner.add_stage("Functional Annotation", run_functional_annotation_stage)
+        if not skip_abundance:
+            from metaquest.pipeline.stages.abundance import run_abundance_stage
+
+            runner.add_stage("Gene Abundance", run_abundance_stage)
 
     runner.add_stage("Reporting", run_reporting_stage)
     return runner

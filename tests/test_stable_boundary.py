@@ -57,6 +57,20 @@ def test_default_pipeline_excludes_experimental_stages():
         "Metagenomic Assembly",
         "Gene Prediction",
         "Functional Annotation",
+        "Gene Abundance",
+        "Reporting",
+    ]
+
+
+def test_skip_abundance_omits_read_mapping():
+    config = load_config()
+
+    assert _stage_names(build_default_pipeline(config, skip_abundance=True)) == [
+        "Read Preprocessing",
+        "Taxonomic Classification",
+        "Metagenomic Assembly",
+        "Gene Prediction",
+        "Functional Annotation",
         "Reporting",
     ]
 
@@ -79,6 +93,7 @@ def test_skip_functional_stops_after_gene_prediction():
         "Taxonomic Classification",
         "Metagenomic Assembly",
         "Gene Prediction",
+        "Gene Abundance",
         "Reporting",
     ]
 

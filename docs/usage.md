@@ -83,8 +83,9 @@ metaquest run \
   --output results/sample
 ~~~
 
-This additionally runs MEGAHIT, Pyrodigal, and eggNOG-mapper. Use
-`--skip-functional` when only the predicted gene catalog is required.
+This additionally runs MEGAHIT, Pyrodigal, eggNOG-mapper, and BBMap gene
+abundance. Use `--skip-functional` when only the predicted gene catalog is
+required, and `--skip-abundance` to skip read mapping.
 
 Useful options:
 
@@ -96,6 +97,7 @@ Useful options:
 | `--taxonomy-only` | taxonomy-only execution |
 | `--skip-annotation` | deprecated alias for `--taxonomy-only` |
 | `--skip-functional` | stop after Pyrodigal gene prediction |
+| `--skip-abundance` | skip read mapping and gene/functional abundance |
 | `--annotation-threads N` | eggNOG-mapper worker threads |
 | `--plot-formats svg png pdf` | override configured figure formats |
 | `--resume` | reuse stages only when inputs and effective configuration match |

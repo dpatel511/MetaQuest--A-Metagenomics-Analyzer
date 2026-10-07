@@ -117,6 +117,7 @@ def run_analysis(input_file, output_dir, cli_args=None):
         or getattr(cli_args, "skip_annotation", False)
     )
     skip_functional = getattr(cli_args, "skip_functional", False)
+    skip_abundance = bool(getattr(cli_args, "skip_abundance", False))
     resume = getattr(cli_args, "resume", False)
 
     if resume:
@@ -128,6 +129,7 @@ def run_analysis(input_file, output_dir, cli_args=None):
                 "read_mode": read_mode,
                 "taxonomy_only": skip_annotation,
                 "skip_functional": skip_functional,
+                "skip_abundance": skip_abundance,
                 "low_memory": bool(getattr(cli_args, "low_memory", False)),
             },
         )
@@ -140,6 +142,7 @@ def run_analysis(input_file, output_dir, cli_args=None):
         read_mode=read_mode,
         skip_annotation=skip_annotation,
         skip_functional=skip_functional,
+        skip_abundance=skip_abundance,
         low_memory=getattr(cli_args, "low_memory", False),
         resume=resume,
     )
@@ -154,6 +157,7 @@ def run_analysis(input_file, output_dir, cli_args=None):
         config,
         skip_annotation=skip_annotation,
         skip_functional=skip_functional,
+        skip_abundance=skip_abundance,
     )
 
     ctx = pipeline.run(ctx)

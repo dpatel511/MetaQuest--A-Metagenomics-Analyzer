@@ -54,6 +54,14 @@ class AnnotationResult:
 
 
 @dataclass
+class AbundanceResult:
+    gene_abundance: Path
+    functional_abundance: Path | None = None
+    summary: dict[str, Any] = field(default_factory=dict)
+    reused: bool = False
+
+
+@dataclass
 class PipelineContext:
     """Accumulates results as stages execute sequentially."""
 
@@ -63,6 +71,7 @@ class PipelineContext:
     read_mode: str = "paired"  # paired | single | interleaved
     skip_annotation: bool = False
     skip_functional: bool = False
+    skip_abundance: bool = False
     low_memory: bool = False
     resume: bool = False
     analysis_input_files: list[Path] = field(default_factory=list)
@@ -72,6 +81,7 @@ class PipelineContext:
     classification: ClassificationResult | None = None
     assembly: AssemblyResult | None = None
     annotation: AnnotationResult | None = None
+    abundance: AbundanceResult | None = None
 
     # Metadata for reproducibility
     metadata: dict[str, Any] = field(default_factory=dict)
