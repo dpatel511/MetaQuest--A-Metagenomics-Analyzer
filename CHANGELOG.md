@@ -6,6 +6,7 @@
   responses instead of rejecting each completed chunk as an unexpected size.
 - Direct database help and missing-data diagnostics to MetaQuest's managed
   `databases` commands.
+- Suggest the correct `eggnog-mapper` Conda package when `emapper.py` is missing.
 
 All notable changes to MetaQuest are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).

@@ -50,7 +50,8 @@ def run_system_check(
         tools['reformat.sh'] = None
     for tool, cmd in tools.items():
         if not _check_command(tool, cmd):
-            errors.append(f"Tool not found: '{tool}'. Please install it, e.g., via 'conda install -c bioconda {tool}'.")
+            package = "eggnog-mapper" if tool == "emapper.py" else tool
+            errors.append(f"Tool not found: '{tool}'. Please install it, e.g., via 'conda install -c bioconda {package}'.")
 
     # Python Packages
     formatter.substep("Checking Python packages...")
