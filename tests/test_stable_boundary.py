@@ -205,6 +205,27 @@ def test_default_functional_check_requires_eggnog_tools_and_databases(
     assert "emapper.py" in checked
 
 
+def test_missing_emapper_suggests_eggnog_mapper_package(tmp_path, monkeypatch):
+    config = load_config(db_dir=tmp_path)
+    monkeypatch.setattr(
+        utils,
+        "_check_command",
+        lambda name, _version=None: name != "emapper.py",
+    )
+    captured = []
+    formatter = SimpleNamespace(
+        info=lambda *_args, **_kwargs: None,
+        substep=lambda *_args, **_kwargs: None,
+        warning=lambda *_args, **_kwargs: None,
+        error=lambda _message, *, solutions: captured.extend(solutions),
+    )
+
+    with pytest.raises(SystemExit):
+        utils.run_system_check(formatter, config=config, require_functional=True)
+
+    assert "conda install -c bioconda eggnog-mapper" in "\n".join(captured)
+
+
 def test_stable_report_contains_no_risk_output(tmp_path):
     bracken_file = tmp_path / "bracken_report.tsv"
     pd.DataFrame(
